@@ -1,0 +1,9 @@
+Early stage potential TODO lists
+- store notification message in DB [e.g sqlite] if the client socket is dead/offline
+- handle persistent Session and Socket ID according to user id [just thought, not sure]
+- setup with docker
+- add various authentications
+- handle for sending various data types like json, buffer, string
+- custom unique event names
+- add custom data encryption
+- handle different websocket engines [just thought, not sure]
