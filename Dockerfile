@@ -1,14 +1,13 @@
-FROM node:20
+FROM node:20-alpine
 
 WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm install --production
 
 COPY . .
 
-# TODO : to expose two ports for express and websocket
 EXPOSE 3000
 
-CMD ["node", "src/main.js"]
+CMD ["node", "src/index.js"]

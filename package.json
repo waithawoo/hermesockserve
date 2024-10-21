@@ -1,18 +1,26 @@
 {
   "name": "hermesockserve",
   "version": "1.0.0",
-  "description": "Modular Websocket Server using socket.io",
-  "main": "src/main.js",
+  "description": "A Modular Websocket Server and HTTP API for real-time notifications using socket.io",
+  "main": "src/index.js",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node src/main.js"
+    "start": "node src/index.js"
   },
   "author": "waithawoo",
   "license": "MIT",
+  "keywords": [
+    "websocket",
+    "real-time",
+    "server",
+    "notifications"
+  ],
   "dependencies": {
     "axios": "^1.7.7",
+    "dotenv": "^16.4.5",
     "express": "^4.21.1",
+    "jsonwebtoken": "^9.0.2",
     "socket.io": "^4.8.0",
     "ws": "^8.18.0"
   }

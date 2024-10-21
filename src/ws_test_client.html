@@ -13,7 +13,13 @@
 
     <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
     <script>
-        const socket = io('ws://0.0.0.0:3000'); 
+        const socket = io('ws://0.0.0.0:3000', {
+            withCredentials: true,
+            extraHeaders: {"x-custom-service": "ABCLARA1faeed5ac7f0c784a490e9d4710796121c3a3ddbd84ac45ea5bd94249b185352"},
+            auth: {
+                token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiZ3Vlc3QiLCJpYXQiOjE3Mjk1MDAzODcsImV4cCI6MTcyOTUwMzk4N30.LhBsmczNqvWB3CoznmkXJsSbrcwjps7vzQ7rEm915Ac'
+            }
+        }); 
 
         socket.on('connect', () => {
             console.log('Connection established:', socket.id);

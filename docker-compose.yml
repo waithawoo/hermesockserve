@@ -1,7 +1,13 @@
 services:
   hermesockserve:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hermesockserve
     ports:
       - "3000:3000"
-      - "5000:5000"
-    restart: always
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - .:/usr/src/app
+    # command: npm run start
