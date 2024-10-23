@@ -23,7 +23,6 @@
 
         socket.on('connect', () => {
             console.log('Connection established:', socket.id);
-            
         });
 
         socket.on('disconnect', () => {
@@ -40,7 +39,8 @@
         });
 
         function sendMessage(){
-            socket.send('I am client')
+            // socket.send('I am client')
+            socket.emit('custom_event', 'heeee')
         }
     </script>
 </body>

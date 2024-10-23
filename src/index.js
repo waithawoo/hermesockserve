@@ -2,26 +2,51 @@ import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import cors from "cors";
-import dotenv from 'dotenv';
 import HermesWS from "./HermesWS.js";
-import {
-    http_apiKeyMiddleware,
-    http_jwtAuthMiddleware,
-    http_customHeaderMiddleware, 
-    ws_jwtAuthMiddleware
-} from "./middlewares.js";
 import { generateJWTToken } from "./utils.js";
 
-dotenv.config();
-const JWT_SECRET = process.env.JWT_SECRET
-const [CUSTOM_HEADER_NAME, CUSTOM_HEADER_VALUE] = process.env.CUSTOM_HEADERS.split(':')
+import { createHttpMiddlewares, createWsMiddlewares } from "./middlewares.js";
 
-console.log('JWT_SECRET ', JWT_SECRET)
-console.log('CUSTOM_HEADER_NAME ', CUSTOM_HEADER_NAME)
-console.log('CUSTOM_HEADER_VALUE ', CUSTOM_HEADER_VALUE)
-console.log('generateJWTToken ', generateJWTToken())
+const config = {
+    jwtSecret: null,
+    customHeader: null,
+    validApiKeys: []
+};
 
-export function startHermesWS({ httpPort = 3000, httpOptions = {}, wsOptions = {} }) {
+export function setConfig(key, value) {
+    if (key in config) {
+        config[key] = value;
+    } else {
+        throw new Error(`Invalid configuration key: ${key}`);
+    }
+}
+
+export async function startHermesWS({ httpPort = 3000, httpOptions = {}, wsOptions = {}, dbConfig = null }) {
+    
+    const { jwtSecret, customHeader, validApiKeys } = config;
+
+    if (!jwtSecret) {
+        throw new Error("JWT Secret is required");
+    }
+
+    if (!customHeader) {
+        throw new Error("Custom header is required");
+    }
+
+    const httpMiddlewaresConfig = {
+        'api-key': createHttpMiddlewares['api-key'](validApiKeys),
+        'jwt': createHttpMiddlewares['jwt'](jwtSecret),
+        'custom-header': createHttpMiddlewares['custom-header'](customHeader)
+    };
+    const wsMiddlewaresConfig = {
+        'api-key': createWsMiddlewares['api-key'](validApiKeys),
+        'jwt': createWsMiddlewares['jwt'](jwtSecret),
+        'custom-header': createWsMiddlewares['custom-header'](customHeader)
+    };
+
+    console.log("Available http Middlewares:", Object.keys(httpMiddlewaresConfig));
+    console.log("Available WS Middlewares:", Object.keys(wsMiddlewaresConfig));
+
     let host = '0.0.0.0'
 
     // Express HTTP Server
@@ -32,8 +57,16 @@ export function startHermesWS({ httpPort = 3000, httpOptions = {}, wsOptions = {
         methods: httpOptions.methods || ['GET', 'POST'],
         credentials: httpOptions.credentials || true,
     }));
-    // expressApp.use(apiKeyMiddleware);
-    // expressApp.use(customHeaderMiddleware);
+
+    // HTTP middelewares
+    if (httpOptions.auth_middleware_types) {
+        httpOptions.auth_middleware_types.forEach(each => {
+            if (!httpMiddlewaresConfig[each]) {
+                throw new Error(`Invalid http middleware type: ${each}`);
+            }
+            expressApp.use(httpMiddlewaresConfig[each]);
+        });
+    }
 
     const server = createServer(expressApp);
 
@@ -45,34 +78,45 @@ export function startHermesWS({ httpPort = 3000, httpOptions = {}, wsOptions = {
     // SocketIO WebSocket server - attach the SocketIO WebSocket server to the same HTTP server
     const wsServerObj = new Server(server, {
         cors: {
-            origin: 'http://127.0.0.1:5500',
+            origin: ['http://127.0.0.1:5500', 'http://127.0.0.1:8000'],
             allowedHeaders: undefined,
             credentials: true
         },
-        allowRequest: (req, callback) => {
-            const hasCustomHeader = req.headers[CUSTOM_HEADER_NAME] !== undefined;
-            const validCustomHeaderValue = req.headers[CUSTOM_HEADER_NAME] === CUSTOM_HEADER_VALUE;
-            console.log('hasCustomHeader && validCustomHeaderValue ', hasCustomHeader && validCustomHeaderValue)
-            callback(null, hasCustomHeader && validCustomHeaderValue);
-        },
+        allowRequest: wsMiddlewaresConfig['custom-header'],
         ...wsOptions
     });
 
-    // Middleware for authenticating the socket
-    wsServerObj.use(ws_jwtAuthMiddleware)
-
+    // Socket middelewares
+    if (wsOptions.auth_middleware_types) {
+        wsOptions.auth_middleware_types.forEach(each => {
+            if (!wsMiddlewaresConfig[each]) {
+                throw new Error(`Invalid ws middleware type: ${each}`);
+            }
+            wsServerObj.use(wsMiddlewaresConfig[each]);
+        });
+    }
 
     // Initialize WebSocket server using HermesWS
-    const wss = new HermesWS(wsServerObj)
-    wss.start()
+    const serverConfig = {
+        server: server,
+        httpPort: httpPort,
+        host: host
+    }
+    const hermesWS = new HermesWS(wsServerObj, serverConfig, dbConfig)
 
-    server.listen(httpPort, host, () => {
-        console.log(`Server is listening on ${httpPort} for both HTTP and WebSocket!`);
-    }).on('error', (err) => {
-        console.log('Server Error:', err);
+    process.on('SIGINT', async () => {
+        console.log('Shutting down server...');
+        await hermesWS.close();
+        process.exit(0);
     });
 
-    return { expressApp, wsServerObj };
+    process.on('SIGTERM', async () => {
+        console.log('Shutting down server...');
+        await hermesWS.close();
+        process.exit(0);
+    });
+
+    return { expressApp, hermesWS };
 }
 
 // Check if the current module is the main module
