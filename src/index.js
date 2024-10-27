@@ -3,7 +3,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import cors from "cors";
 import HermesWS from "./HermesWS.js";
-import { generateJWTToken } from "./utils.js";
+import { _generateSecretKey, _generateJWTToken } from "./utils.js";
 
 import { createHttpMiddlewares, createWsMiddlewares } from "./middlewares.js";
 
@@ -19,6 +19,18 @@ export function setConfig(key, value) {
     } else {
         throw new Error(`Invalid configuration key: ${key}`);
     }
+}
+
+export function generateSecretKey(length = 32){
+    return _generateSecretKey(length)
+}
+
+export function generateJWTToken(payload, expiresIn = "7 days"){
+    const { jwtSecret, customHeader, validApiKeys } = config;
+    if (!jwtSecret) {
+        throw new Error("JWT Secret is required");
+    }
+    return _generateJWTToken(jwtSecret, payload, expiresIn)
 }
 
 export async function startHermesWS({ httpPort = 3000, httpOptions = {}, wsOptions = {}, dbConfig = null }) {
@@ -38,14 +50,15 @@ export async function startHermesWS({ httpPort = 3000, httpOptions = {}, wsOptio
         'jwt': createHttpMiddlewares['jwt'](jwtSecret),
         'custom-header': createHttpMiddlewares['custom-header'](customHeader)
     };
+
     const wsMiddlewaresConfig = {
         'api-key': createWsMiddlewares['api-key'](validApiKeys),
         'jwt': createWsMiddlewares['jwt'](jwtSecret),
         'custom-header': createWsMiddlewares['custom-header'](customHeader)
     };
 
-    console.log("Available http Middlewares:", Object.keys(httpMiddlewaresConfig));
-    console.log("Available WS Middlewares:", Object.keys(wsMiddlewaresConfig));
+    // console.log("Available http Middlewares:", Object.keys(httpMiddlewaresConfig));
+    // console.log("Available WS Middlewares:", Object.keys(wsMiddlewaresConfig));
 
     let host = '0.0.0.0'
 
@@ -71,16 +84,18 @@ export async function startHermesWS({ httpPort = 3000, httpOptions = {}, wsOptio
     const server = createServer(expressApp);
 
     // Test endpoint
-    expressApp.get('/test', async (req, res) => {
-        res.json({ 'hello': 'world' });
-    });
+    // expressApp.get('/test', async (req, res) => {
+    //     res.json({ 'hello': 'world' });
+    // });
 
     // SocketIO WebSocket server - attach the SocketIO WebSocket server to the same HTTP server
     const wsServerObj = new Server(server, {
         cors: {
-            origin: ['http://127.0.0.1:5500', 'http://127.0.0.1:8000'],
-            allowedHeaders: undefined,
-            credentials: true
+            // origin: ['http://127.0.0.1:5500', 'http://127.0.0.1:8000'],
+            origin: wsOptions.cors_origin || ['*'],
+            methods: wsOptions.cors_methods || ['GET', 'POST'],
+            allowedHeaders: undefined, // currently fixed
+            credentials: wsOptions.cors_credentials || true,
         },
         allowRequest: wsMiddlewaresConfig['custom-header'],
         ...wsOptions
@@ -121,11 +136,11 @@ export async function startHermesWS({ httpPort = 3000, httpOptions = {}, wsOptio
 
 // Check if the current module is the main module
 if (import.meta.url === `file://${process.argv[1]}`) {
-    startHermesWS({
-        httpPort: 3000,
-        httpOptions: {},
-        wsOptions: {},
-    });
+    // startHermesWS({
+    //     httpPort: 3000,
+    //     httpOptions: {},
+    //     wsOptions: {},
+    // });
 }
 
 

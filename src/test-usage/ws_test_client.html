@@ -7,7 +7,8 @@
     <title>Test Socket.IO</title>
 </head>
 
-<button onclick="sendMessage()">Send 'I am client' </button>
+<button onclick="sendMessageToAnnouncementChannel()">Send To AnnouncementChannel</button>
+<button onclick="sendMessageToMessageChannel()">Send To MessageChannel</button>
 <body>
     <h1>Socket.IO Test</h1>
 
@@ -17,9 +18,9 @@
             withCredentials: true,
             extraHeaders: {"x-custom-service": "ABCLARA1faeed5ac7f0c784a490e9d4710796121c3a3ddbd84ac45ea5bd94249b185352"},
             auth: {
-                token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiZ3Vlc3QiLCJpYXQiOjE3Mjk1MDAzODcsImV4cCI6MTcyOTUwMzk4N30.LhBsmczNqvWB3CoznmkXJsSbrcwjps7vzQ7rEm915Ac'
+                token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkb21haW4iOiJ1b2N0ZWNoLmNvbSIsInJhbmRvbSI6IjE3YTM4MjhhYjZhZWJjNzdjNTg0MzI5OWIyNmI5YjQzZmJjZTk4OGMzMTcxZTYxNzAwNDllYmMwOGExMTZiNDYiLCJpYXQiOjE3Mjk5OTg0NDEsImV4cCI6MTczMDYwMzI0MX0.f6ym7c86UWUz9--QgFvaXEcyq1HvAaWIR_jBTBWgL2o'
             }
-        }); 
+        });
 
         socket.on('connect', () => {
             console.log('Connection established:', socket.id);
@@ -34,13 +35,19 @@
         });
 
         socket.on('message', (data) => {
-            console.log('Message from server:', data);
-            // socket.send('This')
+            console.log('Message from Server :', data);
         });
 
-        function sendMessage(){
-            // socket.send('I am client')
-            socket.emit('custom_event', 'heeee')
+        socket.on('announcement', (data) => {
+            console.log('Message from Server :', data);
+        });
+
+        function sendMessageToAnnouncementChannel(){
+            socket.emit('announcement', `I am client-${socket.id}`)
+        }
+
+        function sendMessageToMessageChannel(){
+            socket.emit('message', `I am client-${socket.id}`)
         }
     </script>
 </body>

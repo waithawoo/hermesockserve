@@ -4,7 +4,7 @@ const createHttpApiKeyMiddleware = (validApiKeys) => {
     return (req, res, next) => {
         const apiKey = req.header('x-api-key');
         if (!apiKey || !validApiKeys.includes(apiKey)) {
-            return res.status(403).json({ error: 'Forbidden: Invalid API key' });
+            return res.status(403).json({ error: 'Authentication error: Invalid API key' });
         }
         next();
     };
@@ -27,7 +27,7 @@ const createHttpCustomHeaderMiddleware = (customHeader) => {
         const [customHeaderName, customHeaderValue] = customHeader.split(':');
         const customHeaderValueReceived = req.header(customHeaderName);
         if (!customHeaderValueReceived || customHeaderValueReceived !== customHeaderValue) {
-            return res.status(403).json({ error: 'Forbidden: Invalid header value' });
+            return res.status(403).json({ error: 'Authentication error: Invalid header value' });
         }
         next();
     };
@@ -40,7 +40,7 @@ const createWsApiKeyMiddleware = (validApiKeys) => {
             return next(new Error("Authentication error: apiKey is missing"));
         }
         if (!apiKey || !validApiKeys.includes(apiKey)) {
-            return next(new Error("Forbidden: Invalid API key"));
+            return next(new Error("Authentication error: Invalid API key"));
         }
         next();
     };
@@ -63,11 +63,15 @@ const createWsJwtAuthMiddleware = (jwtSecret) => {
 }
 
 const createWsAllowRequest = (customHeader) => {
-    return (req, callback) => {
-        const [customHeaderName, customHeaderValue] = customHeader.split(':');
-        const hasCustomHeader = req.headers[customHeaderName] !== undefined;
-        const validCustomHeaderValue = req.headers[customHeaderName] === customHeaderValue;
-        callback(null, hasCustomHeader && validCustomHeaderValue);
+    return (req, next) => {
+        if(req.constructor.name == 'Socket'){
+            next()
+        }else{
+            const [customHeaderName, customHeaderValue] = customHeader.split(':');
+            const hasCustomHeader = req.headers[customHeaderName] !== undefined;
+            const validCustomHeaderValue = req.headers[customHeaderName] === customHeaderValue;
+            next(null, hasCustomHeader && validCustomHeaderValue);
+        }
     };
 }
 
