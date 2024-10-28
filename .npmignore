@@ -1,0 +1,5 @@
+docker-compose.yml
+Dockerfile
+*.sqlite
+node_modules
+todo.txt
