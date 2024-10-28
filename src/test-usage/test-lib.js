@@ -23,18 +23,27 @@ let secretKEY = generateSecretKey()
 // console.log('jwt token ', jwttoken)
 // console.log('secretKEY ', secretKEY)
 
+async function onConnect (socket){
+    console.log('Custom handler: New client connected with ID:', socket.id)
+    this.broadcastMessage('message', 'HI I am Server1')
+};
+
+async function onDisconnect(socket, reason){
+    console.log(`Custom handler: Client with ID-${socket.id} disconnected. Reason:`, reason);
+};
+
+hermesWS.setOnConnect(onConnect)
+hermesWS.setOnDisconnect(onDisconnect)
+
 hermesWS.start()
 
-try {
-    await hermesWS.DB().createTable('notifications', [
-        'id INTEGER PRIMARY KEY AUTOINCREMENT',
-        'sender_id TEXT',
-        'receiver_id TEXT',
-        'data TEXT'
-    ]);
-} catch (error) {
-    console.log('error ', error)
-}
+await hermesWS.DB().createTable('notifications', [
+    'id INTEGER PRIMARY KEY AUTOINCREMENT',
+    'sender_id TEXT',
+    'receiver_id TEXT',
+    'data TEXT'
+]);
+
 
 hermesWS.addEventHandler('message', onMessageChannelHandler);
 hermesWS.addEventHandler('announcement', onAnnouncementChannelHandler);

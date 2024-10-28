@@ -57,9 +57,6 @@ export async function startHermesWS({ httpPort = 3000, httpOptions = {}, wsOptio
         'custom-header': createWsMiddlewares['custom-header'](customHeader)
     };
 
-    // console.log("Available http Middlewares:", Object.keys(httpMiddlewaresConfig));
-    // console.log("Available WS Middlewares:", Object.keys(wsMiddlewaresConfig));
-
     let host = '0.0.0.0'
 
     // Express HTTP Server
@@ -133,14 +130,3 @@ export async function startHermesWS({ httpPort = 3000, httpOptions = {}, wsOptio
 
     return { expressApp, hermesWS };
 }
-
-// Check if the current module is the main module
-if (import.meta.url === `file://${process.argv[1]}`) {
-    // startHermesWS({
-    //     httpPort: 3000,
-    //     httpOptions: {},
-    //     wsOptions: {},
-    // });
-}
-
-

@@ -2,7 +2,9 @@ import Database from "./db/Database.js";
 export default class HermesWS {
     #db = null;
     #eventHandlers = new Map();
-    #connectedSockets = new Set();
+    #connectedSockets = new Map();
+    #onConnect = null;
+    #onDisconnect = null;
 
     constructor(WebSocketServer, serverConfig, dbConfig = null) {
         this.wss = WebSocketServer;
@@ -12,7 +14,6 @@ export default class HermesWS {
     }
 
     #applyEventHandlers(socket) {
-        // console.log('applying EventHandlers')
         this.#eventHandlers.forEach((handler, eventName) => {
             socket.on(eventName, handler.bind(this, socket));
         });
@@ -22,29 +23,50 @@ export default class HermesWS {
         if(socketIds.length == 0){
             socketIds = await this.wss.allSockets();
         }
-        // console.log('socketIds ', socketIds)
         socketIds.forEach((socketID) => {
-            if(socketID.readyState === WebSocket.OPEN) {
-            this.wss.to(socketID).emit(channel, message)
+            if(this.#connectedSockets.get(socketID).connected) {
+                this.wss.to(socketID).emit(channel, message)
             }
         });
     }
 
     async #sendMsg(socketID, message, channel = 'message') {
-        if(socketID.readyState === WebSocket.OPEN) {
+        if(this.#connectedSockets.get(socketID).connected) {
             this.wss.to(socketID).emit(channel, message)
         }
+    }
+
+    #checkForArrowFunction(handler, handlerName = null) {
+        if (typeof handler === 'function') {
+            if (!handler.prototype && handler.toString().includes('=>')) {
+                throw new Error(`${handlerName || handler.name} is an arrow function. Use a regular function to ensure 'this' binds correctly.`);
+            }
+            return handler.bind(this);
+        }
+        throw new Error(`The handler has to be a function , not ${typeof handler}`);
+    }
+
+    setOnConnect(onConnect = null) {
+        this.#checkForArrowFunction(onConnect)
+        this.#onConnect = onConnect.bind(this)
+    }
+
+    setOnDisconnect(onDisconnect = null) {
+        this.#checkForArrowFunction(onDisconnect)
+        this.#onDisconnect = onDisconnect.bind(this)
     }
 
     async start() {
         if(this.started){
             throw new Error('HermesWS already started.')
         }
-        console.log('---- HermesWS started')
+        if(!this.#onConnect || !this.#onDisconnect){
+            throw new Error('Please set both onConnect and onDisconnect handlers before start.')
+        }
 
         this.serverConfig.server.listen(this.serverConfig.httpPort, this.serverConfig.host, () => {
             this.started = true;
-            console.log(`Server is listening on ${this.serverConfig.httpPort} for both HTTP and WebSocket!`);
+            console.log(`HermesWS Server is listening on ${this.serverConfig.httpPort} for both HTTP and WebSocket!`);
         }).on('error', async(err) => {
             console.log('Server Error:', err);
             await this.close();
@@ -52,14 +74,17 @@ export default class HermesWS {
 
         if(this.#db){
             await this.#db.connect();
+            console.log(' Database connected.');
         }
-        console.log('---- Database connected and table created.');
 
         this.wss.on('connection', async (socket) => {
             let sid = socket.id
-            this.#connectedSockets.add(socket);
-            console.log('---- New client connected - ', sid);
+            this.#connectedSockets.set(socket.id, socket);
 
+            if (typeof this.#onConnect === 'function') {
+                this.#onConnect(socket);
+            }
+            
             this.#applyEventHandlers(socket);
             
             // Default channel 'message' to handle incoming  messages from the clients
@@ -67,19 +92,23 @@ export default class HermesWS {
             });
 
             socket.on("disconnect", (reason) => {
-                this.#connectedSockets.delete(socket);
-                console.log('Client disconnected : ', reason);
+                this.#connectedSockets.delete(socket.id);
+                if (typeof this.#onDisconnect === 'function') {
+                    this.#onDisconnect(socket, reason);
+                }
             });
 
             socket.conn.on("close", (reason) => {
-                this.#connectedSockets.delete(socket);
-                console.log('Client closed : ', reason);
+                this.#connectedSockets.delete(socket.id);
+                if (typeof this.#onDisconnect === 'function') {
+                    this.#onDisconnect(socket, reason);
+                }
             });
         });
     }
 
     addEventHandler(eventName, handler) {
-        // console.log('Adding EventHandlers')
+        this.#checkForArrowFunction(handler)
         this.#eventHandlers.set(eventName, handler.bind(this));
     }
 
@@ -92,7 +121,7 @@ export default class HermesWS {
         if(this.#db){
             return this.#db;
         }
-        return null;
+        throw new Error('db instance is null')
     }
 
     async broadcastMessage(channel, message, socketIds) {
@@ -107,7 +136,6 @@ export default class HermesWS {
         this.started = false
         if(this.#db){
             await this.#db.close();
-            console.log('Database connection closed.');
         }
     }
 }
