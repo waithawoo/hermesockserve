@@ -3,3 +3,4 @@ Dockerfile
 *.sqlite
 node_modules
 todo.txt
+.env
