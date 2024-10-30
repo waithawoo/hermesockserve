@@ -6,17 +6,10 @@ HermesWS is a WebSocket server with an HTTP API for sending real-time notificati
 
 ## Installation
 
-To install it via npm:
+Install it via npm:
 
 ```bash
 npm install hermesockserve
-```
-
-To run with docker:
-
-```bash
-docker build -t hermesockserve .
-docker run -p 3000:3000 --name hermesockserve hermesockserve
 ```
 
 ## Usage
@@ -55,7 +48,6 @@ await hermesWS.DB().createTable('notifications', [
     'receiver_id TEXT',
     'data TEXT',
 ]);
-
 
 await hermesWS.DB().insert(tableName, data) // tableName : string, data : json
 await hermesWS.DB().query(tableName, conditions) // tableName : string, condidtion : json
