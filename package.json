@@ -2,11 +2,14 @@
   "name": "hermesockserve",
   "version": "1.0.0",
   "description": "A Modular Websocket Server and HTTP API for real-time notifications using socket.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/waithawoo/hermesockserve.git"
+  },
   "main": "src/index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node src/index.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "waithawoo",
   "license": "MIT",
