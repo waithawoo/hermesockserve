@@ -16,7 +16,13 @@ npm install hermesockserve
 
 ```js
 // Import the required functions
-import { startHermesWS, setConfig, generateJWTToken, generateSecretKey } from 'hermesockserve';
+import { startHermesWS, setHermesConfig, generateJWTToken, generateSecretKey } from 'hermesockserve';
+
+// First, Setup the required configuration values for middlewares
+// Recommend load from .env for all config values for security concerns
+setHermesConfig('jwtSecret', 'JWT_SECRET')
+setHermesConfig('customHeader', 'HEADER_NAME:HEADER_VALUE') // ':' must be used for delimiter
+setHermesConfig('validApiKeys', ['apikey1','apikey2']) // Must be array type
 
 // ---- Server Setup
 // Setup WebSocket and HTTP servers with necessary configurations
@@ -31,11 +37,16 @@ const { expressApp, hermesWS } = await startHermesWS({
   dbConfig: { dbFile: './mydb.sqlite' } // set 'null' in case of that Database is not needed
 });
 
-// Setup the required configuration values for middlewares
-// Recommend load from .env for all config values for security concerns
-setConfig('jwtSecret', 'JWT_SECRET')
-setConfig('customHeader', 'HEADER_NAME:HEADER_VALUE') // ':' must be used for delimiter
-setConfig('validApiKeys', ['apikey1','apikey2']) // Must be array type
+// Set onConnect and onDisconnect handlers 
+async function onConnect (socket){
+    console.log('Custom handler: New client connected with ID:', socket.id)
+    this.broadcastMessage('message', 'HI I am Server1')
+};
+async function onDisconnect(socket, reason){
+    console.log(`Custom handler: Client with ID-${socket.id} disconnected. Reason:`, reason);
+};
+hermesWS.setOnConnect(onConnect)
+hermesWS.setOnDisconnect(onDisconnect)
 
 // Start the main Hermes Server
 hermesWS.start()
@@ -69,9 +80,9 @@ hermesWS.addEventHandler('announcement', onAnnouncementChannelHandler);
 // Can use the hermesWS instance as 'this' in event handler functions
 function onMessageChannelHandler(socket, message){
     console.log(`Received message in onMessageChannelHandler from ${socket.id}: ${message}`);
-
     this.broadcastMessage('announcement', 'I am Server')
 };
+
 // ---- Http - Custom API endpoints
 // Add custom http routes if needed
 expressApp.get('/custom-endpoint-1', (req, res) => {

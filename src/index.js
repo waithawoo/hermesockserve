@@ -13,7 +13,7 @@ const config = {
     validApiKeys: []
 };
 
-export function setConfig(key, value) {
+export function setHermesConfig(key, value) {
     if (key in config) {
         config[key] = value;
     } else {

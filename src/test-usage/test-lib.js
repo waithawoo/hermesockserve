@@ -1,9 +1,9 @@
-import { startHermesWS, setConfig, generateJWTToken, generateSecretKey } from '../index.js';
+import { startHermesWS, setHermesConfig, generateJWTToken, generateSecretKey } from '../index.js';
 import { onMessageChannelHandler, onAnnouncementChannelHandler } from './eventHandlers.js';
 
-setConfig('jwtSecret', '28beb44330ca2954db963091b749627532c831294f68d3618967e82c458527ad')
-setConfig('customHeader', 'x-custom-service:ABCLARA1faeed5ac7f0c784a490e9d4710796121c3a3ddbd84ac45ea5bd94249b185352')
-setConfig('validApiKeys', ['a7365c126e9550014949e4b5178b2fdadfd6d5a9e8442da0cfbc92168830ef3a','26c87d358bd390f456e08b282c5d4c573972ef559f523eca4cb88eda02f68ee9'])
+setHermesConfig('jwtSecret', '28beb44330ca2954db963091b749627532c831294f68d3618967e82c458527ad')
+setHermesConfig('customHeader', 'x-custom-service:ABCLARA1faeed5ac7f0c784a490e9d4710796121c3a3ddbd84ac45ea5bd94249b185352')
+setHermesConfig('validApiKeys', ['a7365c126e9550014949e4b5178b2fdadfd6d5a9e8442da0cfbc92168830ef3a','26c87d358bd390f456e08b282c5d4c573972ef559f523eca4cb88eda02f68ee9'])
 
 const { expressApp, hermesWS } = await startHermesWS({
   httpPort: 3000,
