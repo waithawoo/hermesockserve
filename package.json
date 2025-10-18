@@ -1,6 +1,6 @@
 {
   "name": "hermesockserve",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "A Modular Websocket Server and HTTP API for real-time notifications using socket.io",
   "repository": {
     "type": "git",
