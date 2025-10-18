@@ -8,9 +8,17 @@
   },
   "main": "src/index.js",
   "type": "module",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "bin": {
+    "hermesockserve": "./src/cli.js"
   },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "cli": "node src/cli.js"
+  },
+  "files": [
+    "src/",
+    "README.md"
+  ],
   "author": "waithawoo",
   "license": "MIT",
   "keywords": [

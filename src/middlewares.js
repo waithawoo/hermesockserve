@@ -64,12 +64,12 @@ const createWsJwtAuthMiddleware = (jwtSecret) => {
 
 const createWsAllowRequest = (customHeader) => {
     return (req, next) => {
-        if(req.constructor.name == 'Socket'){
+        if(req.constructor.name == 'Socket'){ // tcp call that already upgraded to websocket (Upgraded persistent channel)
             next()
-        }else{
+        }else{ // req.constructor.name == 'IncomingMessage' - initiate http call for websocket upgrade
             const [customHeaderName, customHeaderValue] = customHeader.split(':');
-            const hasCustomHeader = req.headers[customHeaderName] !== undefined;
-            const validCustomHeaderValue = req.headers[customHeaderName] === customHeaderValue;
+            const hasCustomHeader = req.headers[customHeaderName.toLowerCase()] !== undefined;
+            const validCustomHeaderValue = req.headers[customHeaderName.toLowerCase()] === customHeaderValue;
             next(null, hasCustomHeader && validCustomHeaderValue);
         }
     };

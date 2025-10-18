@@ -16,9 +16,9 @@
     <script>
         const socket = io('ws://0.0.0.0:3000', {
             withCredentials: true,
-            extraHeaders: {"x-custom-service": "ABCLARA1faeed5ac7f0c784a490e9d4710796121c3a3ddbd84ac45ea5bd94249b185352"},
+            extraHeaders: {"HEADER_NAME": "HEADER_VALUE"},
             auth: {
-                token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkb21haW4iOiJ1b2N0ZWNoLmNvbSIsInJhbmRvbSI6IjE3YTM4MjhhYjZhZWJjNzdjNTg0MzI5OWIyNmI5YjQzZmJjZTk4OGMzMTcxZTYxNzAwNDllYmMwOGExMTZiNDYiLCJpYXQiOjE3Mjk5OTg0NDEsImV4cCI6MTczMDYwMzI0MX0.f6ym7c86UWUz9--QgFvaXEcyq1HvAaWIR_jBTBWgL2o'
+                token: '<jwt-token>'
             }
         });
 

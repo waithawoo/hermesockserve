@@ -33,7 +33,7 @@ export function generateJWTToken(payload, expiresIn = "7 days"){
     return _generateJWTToken(jwtSecret, payload, expiresIn)
 }
 
-export async function startHermesWS({ httpPort = 3000, httpOptions = {}, wsOptions = {}, dbConfig = null }) {
+export async function startHermesWS({ httpPort = 3000, httpOptions = {}, wsOptions = {}}) {
     
     const { jwtSecret, customHeader, validApiKeys } = config;
 
@@ -114,7 +114,7 @@ export async function startHermesWS({ httpPort = 3000, httpOptions = {}, wsOptio
         httpPort: httpPort,
         host: host
     }
-    const hermesWS = new HermesWS(wsServerObj, serverConfig, dbConfig)
+    const hermesWS = new HermesWS(wsServerObj, serverConfig)
 
     process.on('SIGINT', async () => {
         console.log('Shutting down server...');
